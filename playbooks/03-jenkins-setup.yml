@@ -4,46 +4,43 @@
   gather_facts: True
   hosts: jenkins
   become: True
+  vars:
+    jenkins_home: /var/lib/jenkins
+    jenkins_user: jenkins
+    jenkins_groups: ["docker","jenkins"]
+    jenkins_plugins:
+      - snakeyaml-api
+      - configuration-as-code
+      - terraform
   tasks:
 
     - name: Add groups
       group:
         name: "{{ item }}"
-      with_items:
-        - jenkins
-        - docker
+      with_items: "{{ jenkins_groups }}"
 
     - name: Add jenkins user
       user:
         name: jenkins
         comment: Jenkins Automation Server
-        home: /var/lib/jenkins
+        home: "{{ jenkins_home }}"
         shell: /bin/false
-        groups:
-          - jenkins
-          - docker
+        groups: "{{ jenkins_groups }}"
 
     - name: Create directories
       file:
         state: directory
         path: "{{ item }}"
-        owner: jenkins
+        owner: "{{ jenkins_user}}"
       with_items:
-        - /var/lib/jenkins/plugins
+        - "{{ jenkins_home }}/plugins"
 
     - name: Copy CASC configuration
       template:
         src: "{{ lookup('env', 'PWD') }}/files/jenkins/casc/jenkins.yaml"
-        dest: /var/lib/jenkins/jenkins.yaml
-        owner: jenkins
+        dest: "{{ jenkins_home }}/jenkins.yaml"
+        owner: "{{ jenkins_user}}"
       register: casc_config
-
-    - name: Copy plugins file
-      template:
-        src: "{{ lookup('env', 'PWD') }}/files/jenkins/plugin/plugins.txt"
-        dest: /var/lib/jenkins/plugins.txt
-        owner: jenkins
-      register: plugins_file
 
     - name: Add repository
       yum_repository:
@@ -61,34 +58,22 @@
         state: latest
         update_cache: True
 
-    # CASC dependencies specified in /var/lib/jenkins/plugins/configuration-as-code/META-INF/MANIFEST.MF ( Plugin-Dependencies )
-    # Alternative installation through https://raw.githubusercontent.com/jenkinsci/docker/master/install-plugins.sh
-    - name: Get plugins
-      get_url:
-        url: "https://updates.jenkins-ci.org/latest/{{ item }}.hpi"
-        dest: /var/lib/jenkins/plugins
+    - name: Copy plugins install script
+      copy:
+        src: "{{ lookup('env', 'PWD') }}/files/jenkins/plugin/install-plugins.sh"
+        dest: /usr/lib/jenkins/install-plugins.sh
+        mode: "0755"
         owner: jenkins
-      with_items:
-        - snakeyaml-api
-        - configuration-as-code
-        - terraform
+  
+    - name: Install plugins
+      command: "/usr/lib/jenkins/install-plugins.sh {{ jenkins_home }}{% for p in jenkins_plugins %} {{ p }}{% endfor %}"
       register: plugins_install
 
-    - name: Add CASC environment variable
-      lineinfile:
-        path: /etc/init.d/jenkins
-        insertafter: "### END INIT INFO"
-        line: export CASC_JENKINS_CONFIG=/var/lib/jenkins/jenkins.yaml
-      register: init_file
-
-    - name: Reload jenkins daemon
-      systemd:
-        daemon_reload: True
-        name: jenkins
-      when: init_file.changed
+    - debug:
+        msg: "{{ plugins_install }}"
 
     - name: Start and enable service
       service:
         name: jenkins
-        state: "{% if init_file.changed or plugins_install.changed or casc_config.changed %}restarted{% else %}started{% endif %}"
+        state: "{% if plugins_install.changed or casc_config.changed %}restarted{% else %}started{% endif %}"
         enabled: True

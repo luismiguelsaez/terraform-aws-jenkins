@@ -1,7 +1,7 @@
 # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/README.md
 # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/integrations/src/test/resources/io/jenkins/plugins/casc
 
-#plugins:
+plugins:
   #proxy:
   #  name:
   #  noProxyHost: "*.jenkins.io"
@@ -12,8 +12,8 @@
   #sites:
   #  - id: "default"
   #    url: "https://updates.jenkins.io/update-center.json"
-  #required:
-    #git: '3.9.1'
+  required:
+    git: '3.9.1'
     #credentials: '2.1.18'
     #credentials-binding: '1.17'
     #ssh-credentials: '1.14'
