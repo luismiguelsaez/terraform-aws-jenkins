@@ -6,6 +6,38 @@
   become: True
   tasks:
 
+    - name: Add groups
+      group:
+        name: "{{ item }}"
+      with_items:
+        - jenkins
+        - docker
+
+    - name: Add jenkins user
+      user:
+        name: jenkins
+        comment: Jenkins Automation Server
+        home: /var/lib/jenkins
+        shell: /bin/false
+        groups:
+          - jenkins
+          - docker
+
+    - name: Create directories
+      file:
+        state: directory
+        path: "{{ item }}"
+        owner: jenkins
+      with_items:
+        - /var/lib/jenkins/plugins
+
+    - name: Copy CASC configuration
+      template:
+        src: "{{ lookup('env', 'PWD') }}/files/jenkins/casc/jenkins.yaml"
+        dest: /var/lib/jenkins/jenkins.yaml
+        owner: jenkins
+      register: casc_config
+
     - name: Add repository
       yum_repository:
         name: jenkins
@@ -22,16 +54,31 @@
         state: latest
         update_cache: True
 
+    - name: Get plugins
+      get_url:
+        url: "https://updates.jenkins-ci.org/latest/{{ item }}.hpi"
+        dest: /var/lib/jenkins/plugins
+        owner: jenkins
+      with_items:
+        - snakeyaml-api
+        - configuration-as-code
+      register: plugins_install
+
+    - name: Add CASC environment variable
+      lineinfile:
+        path: /etc/init.d/jenkins
+        insertafter: "### END INIT INFO"
+        line: export CASC_JENKINS_CONFIG=/var/lib/jenkins/jenkins.yaml
+      register: init_file
+
+    - name: Reload jenkins daemon
+      systemd:
+        daemon_reload: True
+        name: jenkins
+      when: init_file.changed
+
     - name: Start and enable service
       service:
         name: jenkins
-        state: started
+        state: "{% if init_file.changed or plugins_install.changed or casc_config.changed %}restarted{% else %}started{% endif %}"
         enabled: True
-
-    - name: Add jenkins user to docker group
-      user:
-        name: jenkins
-        comment: Jenkins Automation Server
-        groups:
-          - jenkins
-          - docker
