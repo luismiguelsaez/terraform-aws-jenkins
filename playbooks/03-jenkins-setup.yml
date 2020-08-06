@@ -38,6 +38,13 @@
         owner: jenkins
       register: casc_config
 
+    - name: Copy plugins file
+      template:
+        src: "{{ lookup('env', 'PWD') }}/files/jenkins/plugin/plugins.txt"
+        dest: /var/lib/jenkins/plugins.txt
+        owner: jenkins
+      register: plugins_file
+
     - name: Add repository
       yum_repository:
         name: jenkins
@@ -54,6 +61,8 @@
         state: latest
         update_cache: True
 
+    # CASC dependencies specified in /var/lib/jenkins/plugins/configuration-as-code/META-INF/MANIFEST.MF ( Plugin-Dependencies )
+    # Alternative installation through https://raw.githubusercontent.com/jenkinsci/docker/master/install-plugins.sh
     - name: Get plugins
       get_url:
         url: "https://updates.jenkins-ci.org/latest/{{ item }}.hpi"
@@ -62,6 +71,7 @@
       with_items:
         - snakeyaml-api
         - configuration-as-code
+        - terraform
       register: plugins_install
 
     - name: Add CASC environment variable

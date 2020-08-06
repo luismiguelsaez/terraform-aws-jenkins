@@ -36,6 +36,17 @@
 #security:
 #  remotingCLI:
 #    enabled: false
+
+tool:
+  terraform:
+    installations:
+      - name: "terraform"
+        home: "/terraform-0.11"
+        properties:
+          - installSource:
+              installers:
+                - terraformInstaller:
+                    id: "0.11.9-linux-amd64"
   
 jenkins:
   systemMessage: "Welcome to Jenkins!!"

@@ -1,2 +1,3 @@
+snakeyaml-api
 configuration-as-code
-configuration-as-code-support
+terrorform-plugin
