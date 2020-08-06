@@ -1,0 +1,7 @@
+
+ci:
+  children:
+    tag_environment_ci:
+    jenkins:
+      children:
+        tag_application_jenkins:

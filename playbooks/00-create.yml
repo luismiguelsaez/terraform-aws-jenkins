@@ -1,0 +1,29 @@
+---
+
+- name: Infrastructure deployment
+  gather_facts: false
+  hosts: localhost
+  connection: local
+  tasks:
+
+    - name: Execute terraform apply
+      terraform:
+        project_path: '../terraform'
+        state: present
+        force_init: True
+      register: terraform_output
+
+    - name: Print terrform outputs
+      debug:
+        msg: "{{ terraform_output.outputs }}"
+
+    - name: Get ssh private key content
+      copy:
+        content: "{{ terraform_output.outputs.ssh_private_key.value }}"
+        dest: "{{ lookup('env', 'PWD') }}/ssh/default.pem"
+        mode: 0600
+
+    - name: Ensure SSH key permissions
+      file:
+        path: "{{ lookup('env', 'PWD') }}/ssh/default.pem"
+        mode: 0600

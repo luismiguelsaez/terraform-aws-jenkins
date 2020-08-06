@@ -1,0 +1,9 @@
+terraform/.terraform/
+terraform/terraform.tfstate*
+terraform/.terraform.tfstate.lock*
+terraform/.terraform.*
+terraform/files/lambda/stop_by_id/pytz*
+terraform/files/lambda/stop_by_tag/pytz*
+
+ssh/*.pem
+.venv
