@@ -1,0 +1,27 @@
+- name: Create LVM volume group
+  lvg:
+    vg: "{{ vg_name }}"
+    pvs: "{{ pv_devices }}"
+    pesize: "{{ pv_pesize | default('32') }}"
+  register: lvm_vg
+
+- name: Create LVM logical volume
+  lvol:
+    vg: "{{ vg_name }}"
+    lv: "{{ lv_name }}"
+    size: "{{ lv_size }}"
+    shrink: False
+
+- name: Create LVM logical volume filesystem
+  filesystem:
+    fstype: "{{ fs_type }}"
+    dev: "/dev/mapper/{{ vg_name }}-{{ lv_name }}"
+    resizefs: False
+
+- name: Mount docker lib data volume
+  mount:
+    path: "{{ fs_mount_point }}"
+    src: "/dev/mapper/{{ vg_name }}-{{ lv_name }}"
+    fstype: "{{ fs_type }}"
+    state: mounted
+  register: data_mount

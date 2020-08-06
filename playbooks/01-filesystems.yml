@@ -1,0 +1,33 @@
+---
+
+  - name: Filesystems setup
+    gather_facts: True
+    hosts: jenkins
+    become: True
+
+    tasks:
+
+      - name: Create and mount filesystems
+        include_tasks: include/lvm_filesystem.yml
+        vars:
+          fs_mount_point: "{{ item.fs_mount_point }}"
+          vg_name: "{{ item.vg_name }}"
+          pv_devices: "{{ item.pv_devices }}"
+          lv_name: "{{ item.lv_name }}"
+          fs_type: "{{ item.fs_type }}"
+          lv_size: "{{ item.lv_size }}"
+        with_items:
+          - name: docker-data
+            fs_mount_point: /var/lib/docker
+            vg_name: data
+            pv_devices: [ "/dev/xvdb" ]
+            lv_name: docker
+            fs_type: xfs
+            lv_size: 40g
+          - name: jenkins-data
+            fs_mount_point: /var/lib/jenkins
+            vg_name: data
+            pv_devices: [ "/dev/xvdb" ]
+            lv_name: jenkins
+            fs_type: xfs
+            lv_size: 60g

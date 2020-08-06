@@ -27,6 +27,11 @@ region = eu-west-1
 output = json
 ```
 
+## Setup ansible roles
+```
+$ ansible-galaxy install --force -r requirements.yml
+```
+
 ## Deployment steps
 ```
 $ ansible-playbook playbooks/00-create.yml

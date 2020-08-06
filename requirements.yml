@@ -1,0 +1,6 @@
+---
+
+- src: https://github.com/h4rdL1nk/ansible-role-docker
+  scm: git
+  version: community-edition
+  name: ansible-role-docker-ce

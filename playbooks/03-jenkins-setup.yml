@@ -1,0 +1,37 @@
+---
+
+- name: Jenkins server setup
+  gather_facts: True
+  hosts: jenkins
+  become: True
+  tasks:
+
+    - name: Add repository
+      yum_repository:
+        name: jenkins
+        description: Jenkins official repository
+        baseurl: http://pkg.jenkins.io/redhat-stable
+        gpgkey: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+        gpgcheck: True
+
+    - name: Install packages
+      yum:
+        name:
+          - java-1.8.0-openjdk
+          - jenkins
+        state: latest
+        update_cache: True
+
+    - name: Start and enable service
+      service:
+        name: jenkins
+        state: started
+        enabled: True
+
+    - name: Add jenkins user to docker group
+      user:
+        name: jenkins
+        comment: Jenkins Automation Server
+        groups:
+          - jenkins
+          - docker

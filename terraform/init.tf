@@ -71,17 +71,9 @@ resource "aws_security_group" "public" {
   }
 
   ingress {
-    description = "Allow HTTP from everywhere"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [ "0.0.0.0/0" ]
-  }
-
-  ingress {
-    description = "Allow HTTPS from everywhere"
-    from_port   = 443
-    to_port     = 443
+    description = "Allow jenkins default port"
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = [ "0.0.0.0/0" ]
   }
@@ -142,8 +134,15 @@ resource "aws_instance" "public" {
     volume_size = 40
   }
 
+  ebs_block_device {
+    delete_on_termination = true
+    device_name = "/dev/xvdb"
+    volume_type = "gp2"
+    volume_size = 120
+  }
+
   tags = {
-    Name          = format("%s-%02d",local.environment,count.index)
+    Name          = format("%s-jenkins-%02d",local.environment,count.index + 1)
     environment   = local.environment
     application   = "jenkins"
     exposition    = "public"

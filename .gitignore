@@ -7,3 +7,5 @@ terraform/files/lambda/stop_by_tag/pytz*
 
 ssh/*.pem
 .venv
+
+roles/

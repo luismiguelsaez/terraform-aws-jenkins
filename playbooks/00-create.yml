@@ -27,3 +27,20 @@
       file:
         path: "{{ lookup('env', 'PWD') }}/ssh/default.pem"
         mode: 0600
+
+    - meta: refresh_inventory
+
+- name: Ensure that hosts are running
+  gather_facts: False
+  hosts: jenkins
+  become: False
+  tasks:
+      
+  - name: Wait for system to become reachable
+    wait_for_connection:
+      delay: 10
+      timeout: 300
+      
+- import_playbook: 01-filesystems.yml
+#- import_playbook: 02-docker-setup.yml
+#- import_playbook: 03-jenkins-setup.yml

@@ -1,0 +1,31 @@
+---
+
+- name: Docker bootstrap ( overlay storage driver )
+  gather_facts: True
+  hosts: jenkins
+  become: True
+
+  roles:
+
+    - role: ansible-role-docker-ce
+      docker_ce_enable: True
+      docker_ce_so_packages:
+        - lvm2
+      docker_pip_enable: True
+      docker_pip_enable_install_script: True
+      docker_pip_so_packages:
+        - python-devel
+        - "@Development tools"
+      docker_pip_python_packages: []
+      docker_daemon_config:
+        bip: "192.168.200.1/24"
+        exec-opts:
+          - native.cgroupdriver=systemd 
+        hosts:
+          - unix:///var/run/docker.sock
+        live-restore: true
+        storage-driver: overlay2
+        icc: true
+        selinux-enabled: true
+        userland-proxy: true
+        log-level: info
