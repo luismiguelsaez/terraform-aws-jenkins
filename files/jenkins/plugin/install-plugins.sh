@@ -36,4 +36,9 @@ do
   RES=$(($RES + $?))
 done
 
-exit $RES
+if [ $RES -gt 0 ]
+then
+  echo "CHANGED"
+else
+  echo "OK"
+fi

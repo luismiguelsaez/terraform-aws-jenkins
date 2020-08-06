@@ -63,12 +63,19 @@
         src: "{{ lookup('env', 'PWD') }}/files/jenkins/plugin/install-plugins.sh"
         dest: /usr/lib/jenkins/install-plugins.sh
         mode: "0755"
-        owner: jenkins
+        owner: "{{ jenkins_user}}"
   
     - name: Install plugins
       command: "/usr/lib/jenkins/install-plugins.sh {{ jenkins_home }}{% for p in jenkins_plugins %} {{ p }}{% endfor %}"
       register: plugins_install
-      changed_when: "plugins_install.rc > 0"
+      changed_when: "plugins_install.stdout == 'CHANGED'"
+
+    - name: Ensure jenkins plugins permissions
+      file:
+        state: directory
+        path: "{{ jenkins_home }}/plugins"
+        recurse: True
+        owner: "{{ jenkins_user}}"
 
     - name: Start and enable service
       service:
