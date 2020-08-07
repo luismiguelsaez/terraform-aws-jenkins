@@ -1,3 +1,0 @@
-snakeyaml-api
-configuration-as-code
-terrorform-plugin
