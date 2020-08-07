@@ -4,81 +4,9 @@
   gather_facts: True
   hosts: jenkins
   become: True
-  vars:
-    jenkins_home: /var/lib/jenkins
-    jenkins_user: jenkins
-    jenkins_groups: ["docker","jenkins"]
-    jenkins_plugins:
-      - snakeyaml-api
-      - configuration-as-code
-      - terraform
-  tasks:
 
-    - name: Add groups
-      group:
-        name: "{{ item }}"
-      with_items: "{{ jenkins_groups }}"
+  roles:
 
-    - name: Add jenkins user
-      user:
-        name: jenkins
-        comment: Jenkins Automation Server
-        home: "{{ jenkins_home }}"
-        shell: /bin/false
-        groups: "{{ jenkins_groups }}"
-
-    - name: Create directories
-      file:
-        state: directory
-        path: "{{ item }}"
-        owner: "{{ jenkins_user}}"
-      with_items:
-        - "{{ jenkins_home }}/plugins"
-
-    - name: Copy CASC configuration
-      template:
-        src: "{{ lookup('env', 'PWD') }}/files/jenkins/casc/jenkins.yaml"
-        dest: "{{ jenkins_home }}/jenkins.yaml"
-        owner: "{{ jenkins_user}}"
-      register: casc_config
-
-    - name: Add repository
-      yum_repository:
-        name: jenkins
-        description: Jenkins official repository
-        baseurl: http://pkg.jenkins.io/redhat-stable
-        gpgkey: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-        gpgcheck: True
-
-    - name: Install packages
-      yum:
-        name:
-          - java-1.8.0-openjdk
-          - jenkins
-        state: latest
-        update_cache: True
-
-    - name: Copy plugins install script
-      copy:
-        src: "{{ lookup('env', 'PWD') }}/files/jenkins/plugin/install-plugins.sh"
-        dest: /usr/lib/jenkins/install-plugins.sh
-        mode: "0755"
-        owner: "{{ jenkins_user}}"
-  
-    - name: Install plugins
-      command: "/usr/lib/jenkins/install-plugins.sh {{ jenkins_home }}{% for p in jenkins_plugins %} {{ p }}{% endfor %}"
-      register: plugins_install
-      changed_when: "plugins_install.stdout == 'CHANGED'"
-
-    - name: Ensure jenkins plugins permissions
-      file:
-        state: directory
-        path: "{{ jenkins_home }}/plugins"
-        recurse: True
-        owner: "{{ jenkins_user}}"
-
-    - name: Start and enable service
-      service:
-        name: jenkins
-        state: "{% if plugins_install.changed or casc_config.changed %}restarted{% else %}started{% endif %}"
-        enabled: True
+    - role: ansible-role-jenkins-server
+      jenkins_groups: [ "jenkins","docker" ]
+      jenkins_plugins: [ "configuration-as-code","terraform" ]

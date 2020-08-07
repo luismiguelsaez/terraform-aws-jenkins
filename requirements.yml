@@ -4,3 +4,7 @@
   scm: git
   version: community-edition
   name: ansible-role-docker-ce
+
+- src: https://github.com/luismiguelsaez/ansible-role-jenkins-server.git
+  scm: git
+  version: master
